@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Travelia | Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+
+:root {
+  --bg-main: #f7f7fb;
+  --primary: #b8c1ec;
+  --secondary: #eebbc3;
+  --accent: #a3d8f4;
+  --white: #ffffff;
+  --text-dark: #2b2b2b;
+}
+
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* BODY */
+body {
+  background: var(--bg-main);
+  color: var(--text-dark);
+}
+
+/* NAVBAR */
+.navbar {
+  background: var(--white);
+  padding: 18px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.logo {
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 1.6rem;
+}
+
+.navbar ul {
+  list-style: none;
+  display: flex;
+  gap: 25px;
+}
+
+.navbar a {
+  text-decoration: none;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.navbar a:hover {
+  color: var(--primary);
+}
+
+/* DASHBOARD GRID */
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+  padding: 40px;
+}
+
+/* PANELS */
+.panel {
+  background: var(--white);
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  transition: 0.3s ease;
+}
+
+.panel:hover {
+  transform: translateY(-4px);
+}
+
+.panel h2 {
+  margin-bottom: 15px;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* INPUTS */
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  outline: none;
+}
+
+input:focus, select:focus {
+  border-color: var(--primary);
+}
+
+/* BUTTONS */
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 25px;
+  border: none;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: var(--white);
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+button:hover {
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* LISTS */
+ul {
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 10px;
+}
+
+/* DATE & RESULT TEXT */
+.date-preview,
+#convertedResult {
+  margin-top: 10px;
+  font-weight: 500;
+  color: #555;
+}
+</style>
+
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <h1 class="logo">Travelia</h1>
+  <ul>
+    <li><a href="location.html">Map and Weather</a></li>
+     <li><a href="reviews.html">Reviews</a></li>
+     <li><a href="collaborate.html">Collaborate</a></li>
+    <li><a href="#" onclick="logout()"> Logout⏻ </a></li>
+  </ul>
+</nav>
+
+
+
+<!-- DASHBOARD -->
+<section class="dashboard">
+
+  <!-- CREATE TRIP -->
+  <div class="panel">
+    <h2>Create Trip</h2>
+    <input id="destination" type="text" placeholder="Destination">
+    <input id="budget" type="number" placeholder="Budget in INR (₹)">
+    <label>Start Date</label>
+    <input type="date" id="startDate">
+    <label>End Date</label>
+    <input type="date" id="endDate">
+    <p id="datePreview" class="date-preview">Select travel dates</p>
+    <button onclick="addTrip()">Add Trip</button>
+  </div>
+
+  <!-- PLANNED TRIPS -->
+  <div class="panel">
+    <h2>Planned Trips</h2>
+    <ul id="tripList"></ul>
+  </div>
+
+  <!-- CURRENCY CONVERTER -->
+  <div class="panel">
+    <h2>Global Currency Converter</h2>
+    <input id="inrAmount" type="number" placeholder="Amount in INR (₹)">
+    <select id="currencySelect">
+      <option>Loading currencies...</option>
+    </select>
+    <button onclick="convertCurrency()">Convert</button>
+    <p id="convertedResult" class="date-preview"></p>
+  </div>
+
+ 
+
+  <div class="panel">
+  <h2>Budget Breakdown</h2>
+
+  <input type="number" id="totalBudget" placeholder="Total Budget (₹)">
+  <input type="number" id="transport" placeholder="Transport (₹)">
+  <input type="number" id="stay" placeholder="Stay (₹)">
+  <input type="number" id="food" placeholder="Food (₹)">
+  <input type="number" id="activities" placeholder="Activities (₹)">
+
+  <button onclick="calculateBudget()">Calculate</button>
+
+  <p id="budgetResult" class="date-preview"></p>
+
+
+</div>
+
+</section>
+
+<SCRIPT>
+
+  // --- Trips ---
+  let trips = [];
+  function addTrip() {
+    const dest = document.getElementById("destination").value;
+    const bud = document.getElementById("budget").value;
+    const start = document.getElementById("startDate").value;
+    const end = document.getElementById("endDate").value;
+
+    if (!dest || !bud || !start || !end) {
+      alert("Please fill all trip details");
+      return;
+    }
+
+    trips.push({ destination: dest, budget: bud, startDate: start, endDate: end });
+
+    document.getElementById("destination").value = "";
+    document.getElementById("budget").value = "";
+    document.getElementById("startDate").value = "";
+    document.getElementById("endDate").value = "";
+    document.getElementById("datePreview").textContent = "Select travel dates";
+
+    renderTrips();
+  }
+
+  function renderTrips() {
+    const tripList = document.getElementById("tripList");
+    tripList.innerHTML = "";
+    trips.forEach(t => {
+      const li = document.createElement("li");
+      li.innerHTML = `<strong>${t.destination}</strong><br>
+                      Budget: ₹${t.budget}<br>
+                      Dates: ${t.startDate} → ${t.endDate}`;
+      tripList.appendChild(li);
+    });
+  }
+
+  // --- Date Preview ---
+  document.getElementById("startDate").addEventListener("change", updateDatePreview);
+  document.getElementById("endDate").addEventListener("change", updateDatePreview);
+
+  function updateDatePreview() {
+    const start = document.getElementById("startDate").value;
+    const end = document.getElementById("endDate").value;
+    const preview = document.getElementById("datePreview");
+
+    if (start && end) {
+      preview.textContent = `Trip planned from ${start} to ${end}`;
+    }
+  }
+
+  
+  // --- Currency Details ---
+  const currencyDetails = {
+    USD: { country: "United States of America", symbol: "$" },
+    EUR: { country: "Eurozone Countries", symbol: "€" },
+    GBP: { country: "United Kingdom", symbol: "£" },
+    JPY: { country: "Japan", symbol: "¥" },
+    INR: { country: "India", symbol: "₹" },
+    AUD: { country: "Australia", symbol: "A$" },
+    CAD: { country: "Canada", symbol: "C$" },
+    CHF: { country: "Switzerland", symbol: "CHF" },
+    CNY: { country: "China", symbol: "¥" },
+    AED: { country: "United Arab Emirates", symbol: "د.إ" },
+    SAR: { country: "Saudi Arabia", symbol: "﷼" },
+    ZAR: { country: "South Africa", symbol: "R" },
+    RUB: { country: "Russia", symbol: "₽" },
+    KRW: { country: "South Korea", symbol: "₩" },
+    SGD: { country: "Singapore", symbol: "S$" },
+    NZD: { country: "New Zealand", symbol: "NZ$" },
+    THB: { country: "Thailand", symbol: "฿" },
+    MYR: { country: "Malaysia", symbol: "RM" },
+    IDR: { country: "Indonesia", symbol: "Rp" },
+    PHP: { country: "Philippines", symbol: "₱" },
+    TRY: { country: "Turkey", symbol: "₺" },
+    BRL: { country: "Brazil", symbol: "R$" },
+    MXN: { country: "Mexico", symbol: "$" },
+    PLN: { country: "Poland", symbol: "zł" },
+    SEK: { country: "Sweden", symbol: "kr" },
+    NOK: { country: "Norway", symbol: "kr" },
+    DKK: { country: "Denmark", symbol: "kr" },
+    HUF: { country: "Hungary", symbol: "Ft" },
+    CZK: { country: "Czech Republic", symbol: "Kč" },
+    ILS: { country: "Israel", symbol: "₪" },
+    PKR: { country: "Pakistan", symbol: "₨" },
+    BDT: { country: "Bangladesh", symbol: "৳" },
+    LKR: { country: "Sri Lanka", symbol: "Rs" },
+    NPR: { country: "Nepal", symbol: "₨" }
+  };
+
+  // --- Currency Converter ---
+  let exchangeRates = {};
+  async function loadCurrencies() {
+    const res = await fetch("https://api.exchangerate-api.com/v4/latest/INR");
+    const data = await res.json();
+    exchangeRates = data.rates;
+
+    const select = document.getElementById("currencySelect");
+    select.innerHTML = "";
+
+    Object.keys(currencyDetails).forEach(code => {
+      const option = document.createElement("option");
+      option.value = code;
+      option.textContent = `${code} (${currencyDetails[code].country})`;
+      select.appendChild(option);
+    });
+  }
+
+  function convertCurrency() {
+    const inr = parseFloat(document.getElementById("inrAmount").value);
+    const currency = document.getElementById("currencySelect").value;
+
+    if (!inr || !currency) {
+      alert("Enter amount and select currency");
+      return;
+    }
+
+    const rate = exchangeRates[currency];
+    const converted = (inr * rate).toFixed(2);
+    const symbol = currencyDetails[currency].symbol || currency;
+
+    document.getElementById("convertedResult").textContent =
+      `Converted Amount: ${symbol}${converted}`;
+  }
+
+  loadCurrencies();
+
+  function calculateBudget() {
+  const total = Number(totalBudget.value);
+  const spent =
+    Number(transport.value) +
+    Number(stay.value) +
+    Number(food.value) +
+    Number(activities.value);
+
+  const remaining = total - spent;
+  const result = document.getElementById("budgetResult");
+
+  if (remaining < 0) {
+    result.style.color = "red";
+    result.textContent = `Over Budget by ₹${Math.abs(remaining)}`;
+  } else {
+    result.style.color = "green";
+    result.textContent = `Remaining Budget: ₹${remaining}`;
+  }
+}
+
+function saveTrip(place) {
+  const user = firebase.auth().currentUser;
+
+  if (!user) {
+    alert("Please login first");
+    return;
+  }
+
+  db.collection("users")
+    .doc(user.uid)
+    .collection("trips")
+    .add({
+      place: place,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(() => {
+      loadTrips();
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Error saving trip");
+    });
+}
+function loadTrips() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  const tripList = document.getElementById("tripList");
+  tripList.innerHTML = "";
+
+  db.collection("users")
+    .doc(user.uid)
+    .collection("trips")
+    .orderBy("createdAt", "desc")
+    .get()
+    .then(snapshot => {
+      snapshot.forEach(doc => {
+        const li = document.createElement("li");
+        li.textContent = doc.data().place;
+        tripList.appendChild(li);
+      });
+    });
+}
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    loadTrips();
+  }
+});
+
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBLYgFIujF0ALn9MFvwNxygX8fauq6KMDw",
+    authDomain: "travelia-e185f.firebaseapp.com",
+    projectId: "travelia-e185f"
+  };
+
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  const auth = firebase.auth();
+
+  // LOGOUT FUNCTION
+  function logout() {
+    auth.signOut()
+      .then(() => {
+        window.location.href = "index.html";
+      })
+      .catch(error => {
+        alert("Logout failed: " + error.message);
+      });
+  }
+
+
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location.href = "index.html";
+    }
+  });
+
+
+
+</script>
+
+</body>
+</html>

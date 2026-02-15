@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Travelia | Explore Location</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+</head>
+
+<body>
+
+<nav class="navbar">
+  <h1 class="logo">Travelia</h1>
+  <ul>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="reviews.html">Reviews</a></li>
+    <li><a href="collaborate.html">Collaborate</a></li>
+  </ul>
+</nav>
+
+<section class="login">
+  <h2>📍 Search Location</h2>
+
+  <input type="text" id="locationInput" placeholder="Enter place name">
+  <button onclick="searchLocation()">Search</button>
+
+  <div id="result" style="margin-top:20px;"></div>
+</section>
+
+<script>
+const WEATHER_API_KEY = "d68b5ee9c0366f64d7bf5e48d0ab4761";
+
+let map;
+let marker;
+
+async function searchLocation() {
+  const place = document.getElementById("locationInput").value;
+  if (!place) {
+    alert("Enter a location");
+    return;
+  }
+
+  document.getElementById("result").innerHTML = "Loading...";
+
+  try {
+    const res = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?q=${place}&units=metric&appid=${WEATHER_API_KEY}`
+    );
+    const data = await res.json();
+
+    if (data.cod !== 200) {
+      document.getElementById("result").innerHTML = "Location not found";
+      return;
+    }
+
+    const lat = data.coord.lat;
+    const lon = data.coord.lon;
+
+    document.getElementById("result").innerHTML = `
+      <h3>${data.name}</h3>
+      <p>🌤️ Weather: ${data.main.temp}°C, ${data.weather[0].description}</p>
+    `;
+
+    showMap(lat, lon, data.name);
+
+  } catch (error) {
+    document.getElementById("result").innerHTML = "Error fetching data";
+  }
+}
+
+function showMap(lat, lon, city) {
+  if (!map) {
+    map = L.map("map").setView([lat, lon], 12);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap"
+    }).addTo(map);
+
+    marker = L.marker([lat, lon]).addTo(map)
+      .bindPopup(city)
+      .openPopup();
+  } else {
+    map.setView([lat, lon], 12);
+    marker.setLatLng([lat, lon])
+      .setPopupContent(city)
+      .openPopup();
+  }
+}
+</script>
+
+
+
+<div id="map" style="height: 300px; margin-top: 20px; border-radius: 10px;"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+
+
+</body>
+</html>

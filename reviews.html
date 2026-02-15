@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Travelia | Trip Reviews</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+:root {
+  --bg:#f7f7fb;
+  --primary:#b8c1ec;
+  --accent:#a3d8f4;
+  --white:#fff;
+  --text:#2b2b2b;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Poppins,sans-serif;
+}
+
+body{background:var(--bg);color:var(--text)}
+
+.navbar{
+  background:#fff;
+  padding:18px 40px;
+  display:flex;
+  justify-content:space-between;
+  box-shadow:0 6px 18px rgba(0,0,0,.06)
+}
+
+.logo{color:var(--primary);font-size:1.6rem;font-weight:600}
+
+.container{max-width:1000px;margin:auto;padding:40px}
+
+.form,.review{
+  background:#fff;
+  padding:25px;
+  border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  margin-bottom:30px
+}
+
+input,textarea,select{
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border-radius:12px;
+  border:1px solid #ddd
+}
+
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:25px;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  color:white;
+  cursor:pointer
+}
+
+.review img{
+  width:100%;
+  margin-top:10px;
+  border-radius:15px
+}
+</style>
+</head>
+
+<body>
+
+<nav class="navbar">
+  <h1 class="logo">Travelia</h1>
+  <li><a href="dashboard.html">Dashboard</a></li>
+</nav>
+
+<div class="container">
+
+<div class="form">
+  <h2>Share Your Trip Experience</h2>
+
+  <input id="place" placeholder="Destination">
+  
+  <select id="rating">
+    <option value="">Rating</option>
+    <option>⭐</option>
+    <option>⭐⭐</option>
+    <option>⭐⭐⭐</option>
+    <option>⭐⭐⭐⭐</option>
+    <option>⭐⭐⭐⭐⭐</option>
+  </select>
+
+  <textarea id="reviewText" rows="4" placeholder="Write your review"></textarea>
+
+  <input type="file" id="photo" accept="image/*">
+
+  <button onclick="postReview()">Post Review</button>
+</div>
+
+<div id="reviewsFeed"></div>
+
+</div>
+
+<!-- FIREBASE SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<script>
+/* 🔥 FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyBLYgFIujF0ALn9MFvwNxygX8fauq6KMDw",
+  authDomain: "travelia-e185f.firebaseapp.com",
+  projectId: "travelia-e185f",
+  storageBucket: "travelia-e185f.appspot.com",
+  messagingSenderId: "50014242406",
+  appId: "1:50014242406:web:b099bd8f25ea4c90e8cfa7"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+/* POST REVIEW */
+async function postReview() {
+  const place = place.value;
+  const rating = rating.value;
+  const text = reviewText.value;
+  const file = photo.files[0];
+
+  if (!place || !rating || !text) {
+    alert("Fill all fields");
+    return;
+  }
+
+  let imageURL = "";
+
+  if (file) {
+    const ref = storage.ref(`reviews/${Date.now()}_${file.name}`);
+    await ref.put(file);
+    imageURL = await ref.getDownloadURL();
+  }
+
+  await db.collection("reviews").add({
+    place,
+    rating,
+    text,
+    imageURL,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  reviewText.value = "";
+  photo.value = "";
+}
+
+/* REAL-TIME REVIEWS */
+db.collection("reviews")
+  .orderBy("createdAt", "desc")
+  .onSnapshot(snapshot => {
+    const feed = document.getElementById("reviewsFeed");
+    feed.innerHTML = "";
+
+    snapshot.forEach(doc => {
+      const r = doc.data();
+
+      feed.innerHTML += `
+        <div class="review">
+          <h3>${r.place}</h3>
+          <p>${r.rating}</p>
+          <p>${r.text}</p>
+          ${r.imageURL ? `<img src="${r.imageURL}">` : ""}
+        </div>
+      `;
+    });
+  });
+</script>
+
+</body>
+</html>

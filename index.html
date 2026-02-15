@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Travelia | Smart Travel Planner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <h1 class="logo">Travelia</h1>
+  <ul>
+    <li><a href="#about">About</a></li>
+    <li><a href="#login">Login</a></li>
+  
+
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  
+  <div class="hero-content">
+    <h2>Plan Smarter.<br>Travel Better.</h2>
+    <p>
+      Travelia helps you plan trips collaboratively with friends,
+      manage budgets, and get AI-powered destination suggestions.
+    </p>
+    <a href="#login" class="btn">Get Started</a>
+  </div>
+  <div class="hero">
+    
+</div>
+
+</section>
+
+<!-- LOGIN -->
+<section id="login" class="login">
+  <h2>Login / Sign Up</h2>
+
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+
+  <button onclick="login()">Login</button><br><br>
+  <button class="outline" onclick="signup()">Sign Up</button>
+</section>
+
+<!-- ABOUT -->
+<section id="about" class="about">
+  <h2>Why Travelia?</h2>
+  <div class="cards">
+    <div class="card">AI Travel Suggestions</div>
+    <div class="card">Group Trip Planning</div>
+    <div class="card">Budget Friendly Stays</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 Travelia | Smart Travel Planner</p>
+</footer>
+
+<!-- FIREBASE SDKs (COMPAT ONLY) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+/* FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyBLYgFIujF0ALn9MFvwNxygX8fauq6KMDw",
+  authDomain: "travelia-e185f.firebaseapp.com",
+  projectId: "travelia-e185f",
+  storageBucket: "travelia-e185f.appspot.com",
+  messagingSenderId: "50014242406",
+  appId: "1:50014242406:web:b099bd8f25ea4c90e8cfa7"
+};
+
+/* INIT FIREBASE */
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+/* AUTO REDIRECT IF LOGGED IN */
+auth.onAuthStateChanged(user => {
+  if (user) {
+    window.location.href = "dashboard.html";
+  }
+});
+
+/* SIGN UP */
+function signup() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  if (!email || !password) {
+    alert("Enter email and password");
+    return;
+  }
+
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(() => {
+      alert("Signup successful! You can now login.");
+    })
+    .catch(error => alert(error.message));
+}
+
+/* LOGIN */
+function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then(() => {
+      window.location.href = "dashboard.html";
+    })
+    .catch(error => alert(error.message));
+}
+</script>
+
+</body>
+</html>
