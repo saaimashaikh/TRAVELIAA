@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Trip Planner | Collaborative</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CDN (OK for development) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f7f7fb, #e0d4f7, #f9d5e5);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+}
+
+
+:root {
+  --bg-main: #f7f7fb;
+  --primary: #b8c1ec;
+  --secondary: #eebbc3;
+  --accent: #a3d8f4;
+  --white: #ffffff;
+  --text-dark: #2b2b2b;
+}
+
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* BODY */
+body {
+  background: var(--bg-main);
+  color: var(--text-dark);
+}
+
+/* NAVBAR */
+.navbar {
+  background: var(--white);
+  padding: 18px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.logo {
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 1.6rem;
+}
+
+.navbar ul {
+  list-style: none;
+  display: flex;
+  gap: 25px;
+}
+
+.navbar a {
+  text-decoration: none;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.navbar a:hover {
+  color: var(--primary);
+}
+
+</style>
+</head>
+
+
+<body>
+
+  <div class="w-full max-w-md p-6 rounded-2xl bg-white/70 backdrop-blur shadow-xl">
+    <h1 class="text-3xl font-semibold mb-6 text-purple-700 text-center">
+      Collaborative Trip Planner
+    </h1>
+
+    <div class="flex mb-4">
+      <input
+        id="taskInput"
+        type="text"
+        placeholder="Add a new trip activity..."
+        class="flex-1 p-3 rounded-lg border focus:ring-2 focus:ring-purple-300"
+      />
+      <button
+        onclick="addTask()"
+        class="ml-2 px-5 bg-purple-400 text-white rounded-lg hover:bg-purple-500"
+      >
+        Add
+      </button>
+    </div>
+
+    <ul id="tasks" class="mb-4"></ul>
+
+    <button
+      onclick="shareTrip()"
+      class="w-full bg-pink-300 text-white py-3 rounded-lg font-semibold hover:bg-pink-400"
+    >
+      Invite Friends
+    </button>
+
+    <div class="flex gap-2 mt-4">
+      <input
+        id="shareLink"
+        readonly
+        class="flex-1 p-2 border rounded text-sm"
+      />
+      <button
+        onclick="copyTripLink()"
+        class="px-4 bg-pink-400 text-white rounded hover:bg-pink-500"
+      >
+        Copy
+      </button>
+    </div>
+  </div>
+
+  <!-- ✅ SINGLE Firebase Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      addDoc,
+      deleteDoc,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+    import {
+      getAuth,
+      signInAnonymously,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+
+    // 🔐 Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBLYgFIujF0ALn9MFvwNxygX8fauq6KMDw",
+      authDomain: "travelia-e185f.firebaseapp.com",
+      projectId: "travelia-e185f",
+      storageBucket: "travelia-e185f.firebasestorage.app",
+      messagingSenderId: "50014242406",
+      appId: "1:50014242406:web:2ffbd58f6b762159e8cfa7",
+    };
+
+    // Init Firebase ONCE
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // Sign in anonymously
+    signInAnonymously(auth).catch(console.error);
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+
+      const userId = user.uid;
+
+      // Trip ID handling
+      const params = new URLSearchParams(window.location.search);
+      let tripId = params.get("trip");
+
+      if (!tripId) {
+        tripId = crypto.randomUUID();
+        window.history.replaceState({}, "", `?trip=${tripId}`);
+      }
+
+      const tripRef = doc(db, "trips", tripId);
+      const tasksRef = collection(tripRef, "tasks");
+
+      // Realtime listener
+      onSnapshot(tasksRef, (snapshot) => {
+        const list = document.getElementById("tasks");
+        list.innerHTML = "";
+
+        snapshot.forEach((snap) => {
+          const task = snap.data();
+          const li = document.createElement("li");
+          li.className =
+            "flex justify-between items-center bg-pink-100 p-2 rounded mb-2";
+
+          li.innerHTML = `
+            <span>${task.name}</span>
+            <button class="text-sm bg-red-400 text-white px-2 py-1 rounded">Delete</button>
+          `;
+
+          li.querySelector("button").onclick = async () => {
+            await deleteDoc(doc(tasksRef, snap.id));
+          };
+
+          list.appendChild(li);
+        });
+      });
+
+      // Add task
+      window.addTask = async () => {
+        const input = document.getElementById("taskInput");
+        const value = input.value.trim();
+        if (!value) return;
+
+        await addDoc(tasksRef, {
+          name: value,
+          addedBy: userId,
+          createdAt: new Date()
+        });
+
+        input.value = "";
+      };
+
+      // Share trip
+      window.shareTrip = () => {
+        const link = `${location.origin}${location.pathname}?trip=${tripId}`;
+        const input = document.getElementById("shareLink");
+        input.value = link;
+        input.select();
+      };
+
+      window.copyTripLink = async () => {
+        const input = document.getElementById("shareLink");
+        await navigator.clipboard.writeText(input.value);
+        alert("Trip link copied!");
+      };
+    });
+  </script>
+</body>
+</html>
