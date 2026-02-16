@@ -5,16 +5,15 @@
   <title>Travelia | Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
 
 :root {
-  --bg-main: #f7f7fb;
-  --primary: #b8c1ec;
-  --secondary: #eebbc3;
-  --accent: #a3d8f4;
+  --primary: #f0426e;
+  --bg-light: #f8f6f6;
+  --bg-dark: #221015;
   --white: #ffffff;
-  --text-dark: #2b2b2b;
+  --text-dark: #181113;
+  --text-soft: #89616b;
 }
 
 /* RESET */
@@ -22,28 +21,31 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 /* BODY */
 body {
-  background: var(--bg-main);
+  background: linear-gradient(135deg, #f8f6f6, #ffe9ef);
   color: var(--text-dark);
+  min-height: 100vh;
 }
 
 /* NAVBAR */
 .navbar {
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
   padding: 18px 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  box-shadow: 0 10px 30px rgba(240, 66, 110, 0.08);
+  border-bottom: 1px solid #f0426e15;
 }
 
 .logo {
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 800;
   font-size: 1.6rem;
 }
 
@@ -56,7 +58,8 @@ body {
 .navbar a {
   text-decoration: none;
   color: var(--text-dark);
-  font-weight: 500;
+  font-weight: 600;
+  transition: 0.3s;
 }
 
 .navbar a:hover {
@@ -67,27 +70,30 @@ body {
 .dashboard {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 25px;
-  padding: 40px;
+  gap: 30px;
+  padding: 50px;
 }
 
-/* PANELS */
+/* PANELS (Glass Style Like Login) */
 .panel {
-  background: var(--white);
-  padding: 25px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  padding: 28px;
   border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  box-shadow: 0 15px 40px rgba(240, 66, 110, 0.08);
+  border: 1px solid #f0426e15;
   transition: 0.3s ease;
 }
 
 .panel:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 50px rgba(240, 66, 110, 0.15);
 }
 
 .panel h2 {
-  margin-bottom: 15px;
+  margin-bottom: 18px;
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 800;
 }
 
 /* INPUTS */
@@ -96,30 +102,35 @@ input, select {
   padding: 12px;
   margin: 8px 0;
   border-radius: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #e6dbde;
   outline: none;
+  transition: 0.3s;
+  font-weight: 500;
 }
 
 input:focus, select:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(240, 66, 110, 0.15);
 }
 
 /* BUTTONS */
 button {
   width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  border-radius: 25px;
+  padding: 13px;
+  margin-top: 12px;
+  border-radius: 30px;
   border: none;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  color: var(--white);
-  font-weight: 500;
+  background: linear-gradient(135deg, #f0426e, #ff7a9a);
+  color: white;
+  font-weight: 700;
   cursor: pointer;
   transition: 0.3s ease;
+  box-shadow: 0 8px 20px rgba(240, 66, 110, 0.2);
 }
 
 button:hover {
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(240, 66, 110, 0.3);
 }
 
 /* LISTS */
@@ -128,17 +139,85 @@ ul {
 }
 
 li {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  color: var(--text-soft);
+  font-weight: 500;
 }
 
 /* DATE & RESULT TEXT */
 .date-preview,
-#convertedResult {
-  margin-top: 10px;
-  font-weight: 500;
-  color: #555;
+#convertedResult,
+#budgetResult {
+  margin-top: 12px;
+  font-weight: 600;
+  color: var(--text-soft);
 }
 </style>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const WEATHER_API_KEY = "d68b5ee9c0366f64d7bf5e48d0ab4761";
+
+let map;
+let marker;
+
+async function searchLocation() {
+  const place = document.getElementById("locationInput").value;
+  if (!place) {
+    alert("Enter a location");
+    return;
+  }
+
+  document.getElementById("result").innerHTML = "Loading...";
+
+  try {
+    const res = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?q=${place}&units=metric&appid=${WEATHER_API_KEY}`
+    );
+    const data = await res.json();
+
+    if (data.cod !== 200) {
+      document.getElementById("result").innerHTML = "Location not found";
+      return;
+    }
+
+    const lat = data.coord.lat;
+    const lon = data.coord.lon;
+
+    document.getElementById("result").innerHTML = `
+      <h3>${data.name}</h3>
+      <p>🌤️ Weather: ${data.main.temp}°C, ${data.weather[0].description}</p>
+    `;
+
+    showMap(lat, lon, data.name);
+
+  } catch (error) {
+    document.getElementById("result").innerHTML = "Error fetching data";
+  }
+}
+
+function showMap(lat, lon, city) {
+  if (!map) {
+    map = L.map("map").setView([lat, lon], 12);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap"
+    }).addTo(map);
+
+    marker = L.marker([lat, lon]).addTo(map)
+      .bindPopup(city)
+      .openPopup();
+  } else {
+    map.setView([lat, lon], 12);
+    marker.setLatLng([lat, lon])
+      .setPopupContent(city)
+      .openPopup();
+  }
+}
+</script>
 
 </head>
 <body>
@@ -147,7 +226,7 @@ li {
 <nav class="navbar">
   <h1 class="logo">Travelia</h1>
   <ul>
-    <li><a href="location.html">Map and Weather</a></li>
+    <li><a href="suggest.html">AI Suggestion</a></li>
      <li><a href="reviews.html">Reviews</a></li>
      <li><a href="collaborate.html">Collaborate</a></li>
     <li><a href="#" onclick="logout()"> Logout⏻ </a></li>
@@ -206,6 +285,19 @@ li {
 
 
 </div>
+
+<!-- 🌍 Explore Location Panel -->
+<div class="panel">
+  <h2>📍 Search Location</h2>
+
+  <input type="text" id="locationInput" placeholder="Enter place name">
+  <button onclick="searchLocation()">Search</button>
+
+  <div id="result" style="margin-top:20px;"></div>
+
+  <div id="map" style="height:300px; margin-top:20px; border-radius:15px;"></div>
+</div>
+
 
 </section>
 
