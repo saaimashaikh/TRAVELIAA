@@ -1,74 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Travelia | Smart Travel Planner</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Travelia - Login to Your Next Adventure</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        primary: "#f0426e",
+        "background-light": "#f8f6f6",
+        "background-dark": "#221015",
+      },
+      fontFamily: {
+        display: ["Plus Jakarta Sans"]
+      },
+      borderRadius: {
+        DEFAULT: "0.25rem",
+        lg: "0.5rem",
+        xl: "0.75rem",
+        full: "9999px"
+      },
+    },
+  },
+}
+</script>
+
+<style>
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+</style>
 </head>
 
-<body>
+<body class="bg-background-light dark:bg-background-dark font-display min-h-screen flex items-center justify-center relative overflow-hidden">
 
-<!-- NAVBAR -->
-<nav class="navbar">
-  <h1 class="logo">Travelia</h1>
-  <ul>
-    <li><a href="#about">About</a></li>
-    <li><a href="#login">Login</a></li>
-  
-
-  </ul>
-</nav>
-
-<!-- HERO -->
-<section class="hero">
-  
-  <div class="hero-content">
-    <h2>Plan Smarter.<br>Travel Better.</h2>
-    <p>
-      Travelia helps you plan trips collaboratively with friends,
-      manage budgets, and get AI-powered destination suggestions.
-    </p>
-    <a href="#login" class="btn">Get Started</a>
-  </div>
-  <div class="hero">
-    
+<!-- Background -->
+<div class="fixed inset-0 z-0">
+  <div class="absolute inset-0 bg-black/30 z-10"></div>
+  <img class="w-full h-full object-cover"
+    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvxHlQAjofrquYbLuYVMIZoEmlfNf2IKp8bnBzfhTG_oz5cRT_E4RfTT3SDecWO8oUn5RfC698HFP3O8EaRdVkaFVHZc9qDEzTiPbYkiFhDp1mVAjRJ7UPOWW3vsfy_BgtVsn0k_P65ZA3BEINh2py0U1rDxmdetHCPuJUe7_wi0r612mkt6iMt-J9Ls040v-OS58I2hKUV4af0rr-yQg1SCQ3yWq8Qn2pBTBIcM_JvrV3VFVMSLu9vi0UtUB6GDa9-jLHDLQLK0k"/>
 </div>
 
-</section>
+<!-- Main -->
+<main class="relative z-20 w-full max-w-[1200px] px-4 py-8 flex justify-center items-center">
 
-<!-- LOGIN -->
-<section id="login" class="login">
-  <h2>Login / Sign Up</h2>
+<div class="glass-card w-full max-w-[480px] rounded-xl shadow-2xl p-8 md:p-12 flex flex-col gap-8">
 
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-
-  <button onclick="login()">Login</button><br><br>
-  <button class="outline" onclick="signup()">Sign Up</button>
-</section>
-
-<!-- ABOUT -->
-<section id="about" class="about">
-  <h2>Why Travelia?</h2>
-  <div class="cards">
-    <div class="card">AI Travel Suggestions</div>
-    <div class="card">Group Trip Planning</div>
-    <div class="card">Budget Friendly Stays</div>
+<!-- Logo -->
+<div class="text-center">
+  <div class="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+    <span class="material-symbols-outlined text-primary text-4xl">flight_takeoff</span>
   </div>
-</section>
+  <h1 class="text-[#181113] text-3xl font-extrabold tracking-tight">Travelia</h1>
+  <p class="text-[#89616b] text-base mt-2">Your next adventure starts here</p>
+</div>
 
-<!-- FOOTER -->
-<footer>
-  <p>© 2026 Travelia | Smart Travel Planner</p>
-</footer>
+<!-- FORM -->
+<form onsubmit="login(); return false;" class="flex flex-col gap-5">
 
-<!-- FIREBASE SDKs (COMPAT ONLY) -->
+<!-- EMAIL -->
+<div class="flex flex-col gap-2">
+  <label class="text-[#181113] text-sm font-semibold">Username or Email</label>
+  <div class="relative">
+    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#89616b] text-xl">mail</span>
+    <input id="email"
+      type="email"
+      required
+      placeholder="Enter your username or email"
+      class="w-full pl-12 pr-4 py-3.5 rounded-lg border border-[#e6dbde] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-[#181113] placeholder:text-[#89616b]/60"/>
+  </div>
+</div>
+
+<!-- PASSWORD -->
+<div class="flex flex-col gap-2">
+  <div class="flex justify-between items-center">
+    <label class="text-[#181113] text-sm font-semibold">Password</label>
+    <a class="text-xs font-medium text-primary hover:underline cursor-pointer">Forgot?</a>
+  </div>
+  <div class="relative flex items-stretch">
+    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#89616b] text-xl">lock</span>
+    <input id="password"
+      type="password"
+      required
+      placeholder="Enter your password"
+      class="w-full pl-12 pr-12 py-3.5 rounded-lg border border-[#e6dbde] focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-[#181113] placeholder:text-[#89616b]/60"/>
+    <button type="button"
+      onclick="togglePassword()"
+      class="absolute right-4 top-1/2 -translate-y-1/2 text-[#89616b] hover:text-primary transition-colors">
+      <span class="material-symbols-outlined text-xl">visibility</span>
+    </button>
+  </div>
+</div>
+
+<!-- Remember -->
+<div class="flex items-center gap-2">
+  <input id="remember" type="checkbox"
+    class="w-4 h-4 rounded border-[#e6dbde] text-primary focus:ring-primary"/>
+  <label for="remember" class="text-sm text-[#181113]/70 cursor-pointer">
+    Keep me logged in
+  </label>
+</div>
+
+<!-- LOGIN BUTTON -->
+<button type="submit"
+  class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-lg shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 group">
+  <span>Explore Now</span>
+  <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">
+    arrow_forward
+  </span>
+</button>
+
+</form>
+
+<!-- SIGNUP -->
+<div class="text-center pt-2">
+  <p class="text-[#89616b] text-sm">
+    New to Travelia?
+    <span onclick="signup()" class="text-primary font-bold hover:underline cursor-pointer">
+      Create an account
+    </span>
+  </p>
+</div>
+
+</div>
+</main>
+
+<div class="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
-/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyBLYgFIujF0ALn9MFvwNxygX8fauq6KMDw",
   authDomain: "travelia-e185f.firebaseapp.com",
@@ -78,18 +154,17 @@ const firebaseConfig = {
   appId: "1:50014242406:web:b099bd8f25ea4c90e8cfa7"
 };
 
-/* INIT FIREBASE */
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-/* AUTO REDIRECT IF LOGGED IN */
+/* AUTO REDIRECT */
 auth.onAuthStateChanged(user => {
   if (user) {
     window.location.href = "dashboard.html";
   }
 });
 
-/* SIGN UP */
+/* SIGNUP */
 function signup() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -100,9 +175,7 @@ function signup() {
   }
 
   auth.createUserWithEmailAndPassword(email, password)
-    .then(() => {
-      alert("Signup successful! You can now login.");
-    })
+    .then(() => alert("Signup successful! Now login."))
     .catch(error => alert(error.message));
 }
 
@@ -112,10 +185,14 @@ function login() {
   const password = document.getElementById("password").value;
 
   auth.signInWithEmailAndPassword(email, password)
-    .then(() => {
-      window.location.href = "dashboard.html";
-    })
+    .then(() => window.location.href = "dashboard.html")
     .catch(error => alert(error.message));
+}
+
+/* TOGGLE PASSWORD */
+function togglePassword() {
+  const input = document.getElementById("password");
+  input.type = input.type === "password" ? "text" : "password";
 }
 </script>
 
