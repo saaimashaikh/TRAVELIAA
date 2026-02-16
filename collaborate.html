@@ -10,6 +10,8 @@
 
   <!-- Tailwind CDN (OK for development) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="style.css">
+
 
 <script src="{{ url_for('static', filename='script.js') }}"></script>
 
@@ -85,13 +87,23 @@ body {
 </style>
 </head>
 
+<body class="flex flex-col min-h-screen">
 
-<body>
-
-  <div class="w-full max-w-md p-6 rounded-2xl bg-white/70 backdrop-blur shadow-xl">
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    
+    <ul>
+       <li><a href="reviews.html">Reviews</a></li>
+       <li><a href="dashboard.html">dashboard</a></li>
+       <li><a href="#" onclick="logout()"> Logout⏻ </a></li>
+    </ul>
+  </nav>
+  <div class="flex-1 flex justify-end items-start p-6">
+  <div class="w-full max-w-md rounded-2xl bg-white/70 backdrop-blur shadow-xl p-6">
     <h1 class="text-3xl font-semibold mb-6 text-purple-700 text-center">
       Collaborative Trip Planner
     </h1>
+   
 
     <div class="flex mb-4">
       <input
