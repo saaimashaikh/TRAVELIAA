@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wanderly | AI Travel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root { --p-pink: #fff5f7; --accent: #f472b6; }
+        body { background-color: var(--p-pink); font-family: sans-serif; }
+        .input-box { background: white; border: 1px solid #fce7f3; border-radius: 1rem; padding: 12px; outline: none; width: 100%; }
+        .day-card { border-left: 6px solid #f472b6; background: white; padding: 1.5rem; border-radius: 1.5rem; margin-bottom: 1.5rem; }
+        .chip { border: 1px solid #fbcfe8; cursor: pointer; padding: 4px 12px; border-radius: 99px; background: white; font-size: 12px; transition: 0.2s; }
+        .chip.active { background: #fbcfe8; border-color: #f472b6; color: #be185d; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+
+    <nav class="p-6 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50">
+        <h1 class="text-4xl font-red text-pink-600">TRAVELIA</h1>
+        <div class="flex gap-4 text-sm font-bold text-black-500">
+            <li><a href="reviews.html">Reviews</a></li>
+     <li><a href="collaborate.html">Collaborate</a></li>
+
+        </div>
+    </nav>
+
+    
+
+    <main class="max-w-6xl mx-auto p-4 flex flex-col lg:flex-row gap-8 mt-4">
+        <div class="lg:w-1/3 space-y-4">
+            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-pink-50">
+                <h2 class="font-bold mb-4">Plan Your Trip</h2>
+                <div class="space-y-3">
+                    <input type="text" id="from" placeholder="From (e.g. Mumbai)" class="input-box">
+                    <input type="text" id="to" placeholder="To (e.g. Hyderabad)" class="input-box">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="date" id="start" class="input-box text-xs">
+                        <input type="date" id="end" class="input-box text-xs">
+                    </div>
+                    <input type="number" id="budget" placeholder="Budget (in USD/INR)" class="input-box">
+                    <div class="flex flex-wrap gap-2" id="interestList">
+                        <span class="chip" onclick="this.classList.toggle('active')">Adventure</span>
+                        <span class="chip" onclick="this.classList.toggle('active')">Food</span>
+                        <span class="chip" onclick="this.classList.toggle('active')">History</span>
+                        <span class="chip" onclick="this.classList.toggle('active')">Culture</span>
+                    </div>
+                    <button onclick="generateTrip()" id="btn" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 rounded-2xl transition">Generate Itinerary</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:w-2/3">
+            <div id="loading" class="hidden text-center py-20 text-pink-400 animate-pulse font-bold">🌸 Creating your magic plan...</div>
+            <div id="itineraryContent"></div>
+        </div>
+    </main>
+
+    <script>
+        // 1. CONFIGURATION
+const GROQ_KEY = "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"; // Use your key from console.groq.com
+
+const firebaseConfig = {
+   apiKey: "AIzaSyBLYgFIujF0ALn9MFvwNxygX8fauq6KMDw",
+      authDomain: "travelia-e185f.firebaseapp.com",
+      projectId: "travelia-e185f",
+      storageBucket: "travelia-e185f.firebasestorage.app",
+      messagingSenderId: "50014242406",
+      appId: "1:50014242406:web:2ffbd58f6b762159e8cfa7",
+};
+
+// 2. INITIALIZE FIREBASE (Safe check)
+let db = null;
+if (firebaseConfig.apiKey !== "YOUR_FIREBASE_API_KEY") {
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+        }
+    } catch (e) { console.error("Firebase Init Error:", e); }
+}
+
+// 3. GENERATION LOGIC
+async function generateTrip() {
+    const btn = document.getElementById('btn');
+    const loader = document.getElementById('loading');
+    const display = document.getElementById('itineraryContent');
+
+    const fromLoc = document.getElementById('from').value;
+    const toLoc = document.getElementById('to').value;
+    const budgetVal = document.getElementById('budget').value;
+    
+    if(!toLoc || GROQ_KEY.includes("YOUR_GROQ")) {
+        alert("Please enter a destination and add your Groq API Key.");
+        return;
+    }
+
+    btn.disabled = true;
+    loader.classList.remove('hidden');
+    display.innerHTML = "";
+
+    const interests = Array.from(document.querySelectorAll('.chip.active')).map(c => c.innerText).join(", ");
+    
+    const prompt = `Create a travel itinerary to ${toLoc} from ${fromLoc}. 
+    Budget: ${budgetVal}. Interests: ${interests}.
+    Output ONLY valid JSON in this structure:
+    { "title": "Trip Title", "total": "Estimated Cost", "days": [{"day": 1, "morning": "...", "afternoon": "...", "evening": "...", "cost": "..."}] }`;
+
+    try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${GROQ_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "llama-3.3-70b-versatile", // High-performance Groq model
+                messages: [
+                    { role: "system", content: "You are a travel assistant that strictly outputs JSON." },
+                    { role: "user", content: prompt }
+                ],
+                response_format: { type: "json_object" } // Forces JSON output
+            })
+        });
+
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.error?.message || "Groq API Error");
+        }
+
+        // Groq uses result.choices[0].message.content
+        const cleanJson = JSON.parse(result.choices[0].message.content);
+
+        render(cleanJson);
+        
+        if (db) {
+            db.collection("trips").add({ ...cleanJson, createdAt: new Date() })
+              .catch(e => console.error("Firebase Save Error:", e));
+        }
+
+    } catch (err) {
+        console.error(err);
+        display.innerHTML = `<div class="p-6 bg-red-50 text-red-600 rounded-2xl border border-red-100">
+            <strong>Oops!</strong> ${err.message}. <br>
+            <small>If this is a CORS error, please use a browser extension to allow cross-origin requests during local development.</small>
+        </div>`;
+    } finally {
+        btn.disabled = false;
+        loader.classList.add('hidden');
+    }
+}
+
+function render(data) {
+    const display = document.getElementById('itineraryContent');
+    let html = `
+        <div class="bg-white p-8 rounded-[2rem] mb-6 border-b-4 border-pink-200 shadow-sm animate-in fade-in duration-500">
+            <h2 class="text-3xl font-black text-gray-800">${data.title}</h2>
+            <p class="text-pink-500 font-bold mt-2">💰 Estimated Total: ${data.total}</p>
+        </div>
+    `;
+
+    data.days.forEach(d => {
+        html += `
+            <div class="day-card shadow-sm">
+                <div class="flex justify-between font-bold text-lg mb-4">
+                    <span>Day ${d.day}</span>
+                    <span class="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-xs">${d.cost}</span>
+                </div>
+                <div class="space-y-4 text-sm text-gray-700">
+                    <p><strong>☀️ Morning:</strong> ${d.morning}</p>
+                    <p><strong>🌤️ Afternoon:</strong> ${d.afternoon}</p>
+                    <p><strong>🌙 Evening:</strong> ${d.evening}</p>
+                </div>
+            </div>
+        `;
+    });
+    display.innerHTML = html;
+}
+    </script>
+</body>
+</html>
