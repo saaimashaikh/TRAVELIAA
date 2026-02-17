@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-GROQ_KEY = os.getenv("GROQ_API_KEYgsk_B09r3Vm5O0Sf3WswXnlaWGdyb3FYMQX80TnGWGqNYes5ciLcURKK")
+GROQ_KEY = os.getenv("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")
 
 @app.route("https://travelia-backend.onrender.com/generate", methods=["POST"])
 def generate():
@@ -46,3 +46,4 @@ def generate():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
