@@ -63,11 +63,11 @@
         <div id="itineraryContent"></div>
     </div>
 </main>
-
 <script>
+
 /* ================= CONFIG ================= */
 
-const GROQ_KEY = "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"; // ⚠️ exposed (as requested)
+const GROQ_KEY = "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";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBLYgFIujF0ALn9MFvwNxygX8fauq6KMDw",
@@ -81,7 +81,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-/* ================= MAIN FUNCTION ================= */
+let currentTrip = null;
+let editingTripId = null;
+
+/* ================= GENERATE ================= */
 
 async function generateTrip() {
     const btn = document.getElementById('btn');
@@ -117,19 +120,14 @@ async function generateTrip() {
         .join(", ");
 
     const prompt = `
-Create a ${days}-day travel itinerary to ${toLoc} from ${fromLoc}.
-Trip dates: ${startDate} to ${endDate}.
-Budget: ${budget}.
-Interests: ${interests}.
-
+Create a ${days}-day travel itinerary to ${toLoc}.
 Generate EXACTLY ${days} days.
-
-Output ONLY valid JSON in this structure:
+Output ONLY JSON in structure:
 {
-  "title": "Trip Title",
-  "total": "Estimated Cost",
+  "title": "",
+  "total": "",
   "days": [
-    { "day": 1, "morning": "...", "afternoon": "...", "evening": "...", "cost": "..." }
+    {"day":1,"morning":"","afternoon":"","evening":"","cost":""}
   ]
 }
 `;
@@ -154,8 +152,8 @@ Output ONLY valid JSON in this structure:
         const data = await res.json();
         const itinerary = JSON.parse(data.choices[0].message.content);
 
-        render(itinerary);
-        db.collection("trips").add({ ...itinerary, createdAt: new Date() });
+        currentTrip = itinerary;
+        render(itinerary, true);
 
     } catch (err) {
         display.innerHTML = `<div class="p-6 bg-red-50 text-red-600 rounded-xl">${err.message}</div>`;
@@ -167,13 +165,22 @@ Output ONLY valid JSON in this structure:
 
 /* ================= RENDER ================= */
 
-function render(data) {
+function render(data, showSave=false) {
     let html = `
         <div class="bg-white p-8 rounded-[2rem] mb-6 border-b-4 border-pink-200">
             <h2 class="text-3xl font-black">${data.title}</h2>
             <p class="text-pink-500 font-bold mt-2">💰 ${data.total}</p>
-        </div>
     `;
+
+    if(showSave){
+        html += `
+            <div class="mt-4 flex gap-2">
+                <button onclick="saveTrip()" class="bg-green-500 text-white px-4 py-2 rounded-xl">Save Trip</button>
+            </div>
+        `;
+    }
+
+    html += `</div>`;
 
     data.days.forEach(d => {
         html += `
@@ -182,14 +189,84 @@ function render(data) {
                 <span>Day ${d.day}</span>
                 <span class="text-pink-600">${d.cost}</span>
             </div>
-            <p><strong>☀️ Morning:</strong> ${d.morning}</p>
-            <p><strong>🌤 Afternoon:</strong> ${d.afternoon}</p>
-            <p><strong>🌙 Evening:</strong> ${d.evening}</p>
+            <p><strong>Morning:</strong> ${d.morning}</p>
+            <p><strong>Afternoon:</strong> ${d.afternoon}</p>
+            <p><strong>Evening:</strong> ${d.evening}</p>
         </div>`;
     });
 
     document.getElementById('itineraryContent').innerHTML = html;
 }
+
+/* ================= SAVE ================= */
+
+async function saveTrip() {
+    if(!currentTrip) return;
+
+    if(editingTripId){
+        await db.collection("trips").doc(editingTripId).update(currentTrip);
+        editingTripId = null;
+    } else {
+        await db.collection("trips").add({
+            ...currentTrip,
+            createdAt: new Date()
+        });
+    }
+
+    alert("Trip Saved!");
+    loadTrips();
+}
+
+/* ================= LOAD PREVIOUS ================= */
+
+async function loadTrips() {
+    const snapshot = await db.collection("trips")
+        .orderBy("createdAt","desc")
+        .get();
+
+    let html = `<h2 class="text-xl font-bold mt-10 mb-4">Previous Trips</h2>`;
+
+    snapshot.forEach(doc => {
+        const trip = doc.data();
+
+        html += `
+        <div class="bg-white p-4 rounded-xl mb-3 border">
+            <div class="flex justify-between">
+                <strong>${trip.title}</strong>
+                <div class="flex gap-2">
+                    <button onclick="editTrip('${doc.id}')" class="text-blue-500">Edit</button>
+                    <button onclick="deleteTrip('${doc.id}')" class="text-red-500">Delete</button>
+                </div>
+            </div>
+        </div>
+        `;
+    });
+
+    document.getElementById('itineraryContent').innerHTML += html;
+}
+
+/* ================= EDIT ================= */
+
+async function editTrip(id) {
+    const doc = await db.collection("trips").doc(id).get();
+    currentTrip = doc.data();
+    editingTripId = id;
+    render(currentTrip, true);
+}
+
+/* ================= DELETE ================= */
+
+async function deleteTrip(id) {
+    if(confirm("Delete this trip?")){
+        await db.collection("trips").doc(id).delete();
+        loadTrips();
+    }
+}
+
+/* ================= INIT ================= */
+
+loadTrips();
+
 </script>
 
 </body>
